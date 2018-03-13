@@ -1,0 +1,186 @@
+EJEMPLO 1 VISTA PARCIAL 
+CODIGO VISTA PARCIAL
+<h3 style="color:black">El siguiente texto está introducido por una vista parcial</h3>
+<br />
+<p style="color:blue">El club madridista, el más laureado del continente, lidera la clasificación por delante del Bayern de Múnich y del Barcelona.</p>
+<br />
+<p style="color:blue">El Real Madrid logró en 2017 su duodécima Copa de Europa y aumentó su leyenda. Como recuerda UEFA en su ránking histórico, 
+    los blancos son el mejor equipo desde la creación del torneo, de acuerdo con un sistema de puntuación que otorga a cada club dos puntos
+    por victoria y uno por empate en los partidos que ha disputado a lo largo de la historia de la competición. De esta forma, 
+    el conjunto madridista, el más laureado del continente con 12 títulos, lidera la tabla con 571 puntos, 
+    superando ampliamente al Bayern de Múnich (443 puntos y cinco títulos) y al Barcelona (410 puntos y 5 títulos).
+</p>
+CODIGO VISTA INDEX
+@{
+    ViewBag.Title = "Vistas Parciales";
+}
+
+<div class="row">
+    @Html.Partial("_VistaParcial")
+    <div>
+        <h2 style="color:blue">
+           En este ejemplo vamos a explicar el uso de las vistas parciales con ASP.NET y MVC 
+        </h2>
+    </div>
+</div>
+CODIGO VISTA ABOUT
+<center>
+    @{
+        ViewBag.Title = "Mejores Equipos de Europa";
+    }
+    <h2>@ViewBag.Title</h2>
+
+    @Html.Partial("_VistaParcial")
+
+    <img src="~/Imagenes/3.jpg" height="450" width="700" />
+</center>
+<p>
+    <h3>El palmarés completo de la competición más importante de Europa a nivel de clubs es el siguiente: </h3>
+    <div>
+        <table class="table-bordered">
+            <tr>
+                <td>12 títulos:</td>
+                <td> Real Madrid (1956, 1957, 1958, 1959, 1960, 1966, 1998, 2000, 2002, 2014, 2016, 2017).</td>
+            </tr>
+            <tr>
+                <td>7 títulos:</td>
+                <td> Milan (1963, 1969, 1989, 1990, 1994, 2003, 2007).</td>
+            </tr>
+            <tr>
+                <td>5 títulos:</td>
+                <td> Bayern Múnich (1974, 1975, 1976, 2001, 2013), FC Barcelona (1992, 2006, 2009, 2011, 2015) y Liverpool (1977, 1978, 1981, 1984, 2005).</td>
+            </tr>
+            <tr>
+                <td>4 títulos:</td>
+                <td> Ajax (1971, 1972, 1973, 1995).</td>
+            </tr>
+            <tr>
+                <td>3 títulos:</td>
+                <td> Inter de Milán (1964, 1965, 2010) y Manchester United (1968, 1999, 2008).</td>
+            </tr>
+            <tr>
+                <td>2 títulos:</td>
+                <td> Juventus (1985, 1996), Benfica (1961, 1962), Nottingham Forest (1979, 1980) y Porto (1987, 2004).</td>
+            </tr>
+            <tr>
+                <td>1 título:</td>
+                <td> Celtic (1967), Hamburgo (1983), Steaua Bucarest (1986), Olympique Marsella (1993), Borussia Dortmund (1997), Chelsea (2012), Feyenoord (1970), Aston Villa (1982), PSV (1988) y Estrella Roja (1991).</td>
+            </tr>
+
+           
+        </table>
+    </div>
+    </p>
+EJEMPLO 2 VISTA PARCIAL CON CODIGO LOGICO
+
+CODIGO MODELO JUGADORES
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace VistasParciales.Models
+{
+    public class JugadoresModelo
+    {
+        ContextoJugadores contexto;
+        public JugadoresModelo()
+        {
+            contexto = new ContextoJugadores();
+        }
+        public List<GOLEADORES> GetGoleadores()
+        {
+            var consulta = from datos in contexto.GOLEADORES
+                           select datos;
+            return consulta.ToList();
+        }
+    }
+}
+CODIGO CONTROLADOR JUGADORES
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using VistasParciales.Models;
+
+namespace VistasParciales.Controllers
+{
+    public class GoleadoresController : Controller
+    {
+        JugadoresModelo JugadoresModelo;
+        public GoleadoresController()
+        {
+            JugadoresModelo = new JugadoresModelo();
+        }
+        [ChildActionOnly]
+        public ActionResult _Goleadores()
+        {
+            List<GOLEADORES> lista = this.JugadoresModelo.GetGoleadores();
+            return PartialView(lista);
+        }
+        public ActionResult Index()
+        {
+            return View();
+        }
+    }
+}
+CODIGO VISTA PARCIAL
+@model List<VistasParciales.Models.GOLEADORES>
+    <h2 style="color:black">Pichichi de lal Liga Española</h2>
+    <div>
+        <table class="table-bordered">
+            <tr>
+                <th>Nombre</th>
+                <th>Apellidos</th>
+                <th>Goles</th>
+            </tr>
+            @foreach (var jug in Model)
+             {
+        <tr>
+            <td>@jug.NOMBRE</td>
+            <td>@jug.APELLIDO</td>
+            <td>@jug.GOLES</td>
+        </tr>
+             }
+        </table>
+    </div>
+CODIGO MOSTRAR LA VISTA PARCIAL EN CONTACT
+<center>
+    @{
+        Html.RenderAction("_Goleadores", "Goleadores");
+    }
+
+    @{
+            ViewBag.Title = "Maximos goleadores de Europa";
+    }
+    <h2>@ViewBag.Title.</h2>
+
+    <img src="~/Imagenes/2.jpg" height="450" width="700" />
+    <br />
+    <br />
+    <div>
+        <table class="table-bordered">
+            <tr>
+                <td><h4>117 Goles</h4></td>
+                <td><h4>Cristiano Ronaldo</h4></td>
+            </tr>
+            <tr>
+                <td><h4>98 Goles</h4></td>
+                <td><h4>Lionel Messi</h4></td>
+            </tr>
+            <tr>
+                <td><h4>71 Goles</h4></td>
+                <td><h4>Raul González</h4></td>
+            </tr>
+            <tr>
+                <td><h4>60 Goles</h4></td>
+                <td><h4>Ruud van Nistelrooy</h4></td>
+            </tr>
+            <tr>
+                <td><h4>59 Goles</h4></td>
+                <td><h4>Andrey Shevchenko</h4></td>
+            </tr>
+        </table>
+    </div>
+</center>
