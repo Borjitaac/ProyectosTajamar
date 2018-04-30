@@ -1,0 +1,251 @@
+Proyecto ServicioNoticiasWebJob 
+
+ModeloNoticias.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ServicioNoticiasWebJob.Modelos;
+
+namespace ServicioNoticiasWebJob.Helpers
+{
+    public class ModeloNoticias
+    {
+        EntidadNoticia entidad;
+        public ModeloNoticias()
+        {
+            this.entidad = new EntidadNoticia();
+        }
+        public int GetUltimoIdNoticia()
+        {
+            var consulta = (from datos in entidad.TITULARES
+                            select datos.IDTITULAR);
+            if (consulta.Count() == 0)
+            {
+                return 1;
+            }
+            else
+            {
+                int ultimoid = consulta.Max();
+                return ultimoid + 1;
+            }
+        }
+        public void ActualizarBBDDNoticias(List<Noticias> lista)
+        {
+            int ultimoid = this.GetUltimoIdNoticia();
+            foreach (var noti in lista)
+            {
+                TITULARES t = new TITULARES();
+                t.IDTITULAR = ultimoid;
+                t.TITULO = noti.Titular;
+                t.ENLACE = noti.Enlace;
+                t.DESCRIPCION = noti.Descripcion;
+                t.FECHA = DateTime.Now;
+                ultimoid += 1;
+                this.entidad.TITULARES.Add(t);
+            }
+            this.entidad.SaveChanges();
+        }
+    }
+}
+---------------------------------------------------------------------
+ServicioNoticias.cs
+
+using ServicioNoticiasWebJob.Modelos;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+namespace ServicioNoticiasWebJob.Helpers
+{
+    public class ServicioNoticias
+    {
+        public List<Noticias> GetNoticiasDia()
+        {
+            String url = "http://www.20minutos.es/rss/";
+            XDocument docxml = XDocument.Load(url);
+            XNamespace ns = "http://purl.org/rss/1.0/";
+            var consulta = from datos in docxml.Descendants(ns + "item")
+                           select new Noticias
+                           {
+                               Titular = datos.Element(ns + "title").Value
+                           ,
+                               Descripcion = datos.Element(ns + "description").Value
+                           ,
+                               Enlace = datos.Element(ns + "link").Value
+                           };
+            return consulta.ToList();
+        }
+    }
+}
+-----------------------------------------------------------------------------------------------
+Noticias.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+namespace ServicioNoticiasWebJob.Modelos
+{
+    public class Noticias
+    {
+        public String Titular { get; set; }
+        public String Enlace { get; set; }
+        public String Descripcion { get; set; }
+    }
+}
+--------------------------------------------------------------
+Program.cs
+
+using ServicioNoticiasWebJob.Helpers;
+using ServicioNoticiasWebJob.Modelos;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ServicioNoticiasWebJob
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            var servicio = new ServicioNoticias();
+            List<Noticias> noticias = servicio.GetNoticiasDia();
+            var modelobbdd = new ModeloNoticias();
+            modelobbdd.ActualizarBBDDNoticias(noticias);
+        }
+    }
+}
+---------------------------------------------------------------------------
+Proyecto NoticiasWebJobMVC
+
+ModeloNoticias.cs
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+
+namespace NoticiasWebJobMVC.Models
+{
+    public class ModeloNoticias
+    {
+        EntidadNoticias entidad;
+        public ModeloNoticias()
+        {
+            this.entidad = new EntidadNoticias();
+        }
+        public List<TITULARES> GetTitulares(int numero)
+        {
+            var consulta = (from datos in entidad.TITULARES
+                            orderby datos.FECHA
+                            select datos).Take(numero);
+            return consulta.ToList();
+        }
+    }
+}
+----------------------------------------------------------------------
+NoticiasController
+
+using NoticiasWebJobMVC.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace NoticiasWebJobMVC.Controllers
+{
+    public class NoticiasController : Controller
+    {
+        ModeloNoticias modelo;
+        public NoticiasController()
+        {
+            this.modelo = new ModeloNoticias();
+        }
+        // GET: Noticias
+        public ActionResult Index()
+        {
+            List<TITULARES> lista = modelo.GetTitulares(10);
+            return View(lista);
+        }
+        [HttpPost]
+        public ActionResult Index(int numeronoticias)
+        {
+            List<TITULARES> lista = modelo.GetTitulares(numeronoticias);
+            return View(lista);
+        }
+    }
+}
+-------------------------------------------------------------------------------------
+Vista Index 
+
+@model IEnumerable<NoticiasWebJobMVC.Models.TITULARES>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Ultimas noticias 20 minutos</h2>
+<form method="post">
+
+    <div>
+        <label>Número de noticias visibles: </label>
+        <input type="text" name="numeronoticias"
+               class="form-control"
+               placeholder="Noticias mostradas" />
+    </div>
+</form>
+<br />
+
+<table class="table">
+    <tr>
+        <th>
+            TITULAR
+        </th>
+        <th>
+          TITULO
+        </th>
+        <th>
+          ENLACE
+        </th>
+        <th>
+            DESCRIPCION
+        </th>
+        <th>
+          FECHA
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.IDTITULAR)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.TITULO)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ENLACE)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.DESCRIPCION)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.FECHA)
+        </td>
+    </tr>
+}
+
+</table>
+----------------------------------------------------------------------
