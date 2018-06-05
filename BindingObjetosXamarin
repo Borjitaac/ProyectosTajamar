@@ -1,0 +1,28 @@
+Vista BindingObjetos
+Codigo a continuación:
+-------------------------------------------------------------------------
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="PostXamarinBindingObjetos.Views.BindingObjetos"
+             BackgroundImage="champions.jpg">
+    <ContentPage.Content>
+        <StackLayout>
+            <Image Source="Bale.jpg" BindingContext="{x:Reference Name=slider}"                
+                    Rotation="{Binding Path=Value}"
+                    HorizontalOptions="Center"
+                    VerticalOptions="CenterAndExpand" />
+            <Slider x:Name="slider"
+                    Maximum="360"
+                    VerticalOptions="CenterAndExpand" />
+
+            <Label BindingContext="{x:Reference slider}"
+                    Text="{Binding Value, StringFormat='El ángulo es {0:F0} grados'}"
+                    FontAttributes="Bold"
+                    FontSize="Large"
+                    HorizontalOptions="Center"
+                    VerticalOptions="CenterAndExpand" />
+            
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
